@@ -3,20 +3,24 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: API for the Sentinel missing-person case and sighting review platform.
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
-    description: Health operations
+  - name: public
+  - name: auth
+  - name: cases
+  - name: sightings
+  - name: review
+  - name: dashboard
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,13 +28,662 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /public/overview:
+    get:
+      operationId: getPublicOverview
+      tags: [public]
+      summary: Public overview counts
+      responses:
+        "200":
+          description: Public system overview
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PublicOverview"
+  /missing-persons:
+    get:
+      operationId: listMissingPersons
+      tags: [cases]
+      summary: Search missing-person cases
+      parameters:
+        - $ref: "#/components/parameters/Search"
+        - name: status
+          in: query
+          schema:
+            $ref: "#/components/schemas/CaseStatus"
+        - name: gender
+          in: query
+          schema:
+            type: string
+        - name: location
+          in: query
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 50
+      responses:
+        "200":
+          description: Case list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MissingPerson"
+    post:
+      operationId: createMissingPerson
+      tags: [cases]
+      summary: Create a missing-person case
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MissingPersonInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MissingPerson"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+  /missing-persons/{id}:
+    get:
+      operationId: getMissingPerson
+      tags: [cases]
+      summary: Get a case
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: Case detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MissingPersonDetail"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    patch:
+      operationId: updateMissingPerson
+      tags: [cases]
+      summary: Update a case
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MissingPersonUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MissingPerson"
+    delete:
+      operationId: archiveMissingPerson
+      tags: [cases]
+      summary: Archive a case
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "204":
+          description: Archived
+  /sightings:
+    get:
+      operationId: listSightings
+      tags: [sightings]
+      summary: List sighting reports
+      parameters:
+        - name: status
+          in: query
+          schema:
+            $ref: "#/components/schemas/SightingStatus"
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 50
+      responses:
+        "200":
+          description: Sighting list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Sighting"
+    post:
+      operationId: createSighting
+      tags: [sightings]
+      summary: Submit a public sighting
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SightingInput"
+      responses:
+        "201":
+          description: Report received
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SightingReceipt"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+  /sightings/{id}:
+    get:
+      operationId: getSighting
+      tags: [sightings]
+      summary: Get a sighting
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: Sighting detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Sighting"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    patch:
+      operationId: updateSighting
+      tags: [review]
+      summary: Update sighting review status
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SightingUpdate"
+      responses:
+        "200":
+          description: Updated sighting
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Sighting"
+  /ai/match:
+    post:
+      operationId: createPhotoMatch
+      tags: [review]
+      summary: Submit a photo for assisted matching
+      description: Returns ranked possible matches for authorized human review. It never establishes identity.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PhotoMatchInput"
+      responses:
+        "200":
+          description: Possible matches
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PhotoMatchResult"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+  /matches:
+    get:
+      operationId: listMatches
+      tags: [review]
+      summary: List match history
+      parameters:
+        - name: reviewStatus
+          in: query
+          schema:
+            $ref: "#/components/schemas/ReviewStatus"
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 50
+      responses:
+        "200":
+          description: Match history
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MatchHistory"
+  /matches/{id}:
+    patch:
+      operationId: updateMatch
+      tags: [review]
+      summary: Review a possible match
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MatchUpdate"
+      responses:
+        "200":
+          description: Reviewed match
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MatchHistory"
+  /alerts:
+    get:
+      operationId: listAlerts
+      tags: [review]
+      summary: List review alerts
+      responses:
+        "200":
+          description: Alerts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Alert"
+  /alerts/{id}:
+    patch:
+      operationId: updateAlert
+      tags: [review]
+      summary: Update alert status
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AlertUpdate"
+      responses:
+        "200":
+          description: Updated alert
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Alert"
+  /dashboard/summary:
+    get:
+      operationId: getDashboardSummary
+      tags: [dashboard]
+      summary: Dashboard summary
+      responses:
+        "200":
+          description: Summary data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummary"
+  /dashboard/activity:
+    get:
+      operationId: getDashboardActivity
+      tags: [dashboard]
+      summary: Recent review activity
+      responses:
+        "200":
+          description: Recent activity
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Activity"
+  /auth/register:
+    post:
+      operationId: register
+      tags: [auth]
+      summary: Register an account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterInput"
+      responses:
+        "201":
+          description: Registered user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Sign in
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginInput"
+      responses:
+        "200":
+          description: Signed-in user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 components:
+  parameters:
+    Id:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+        minimum: 1
+    Search:
+      name: search
+      in: query
+      schema:
+        type: string
+        maxLength: 100
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    NotFound:
+      description: Not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
   schemas:
     HealthStatus:
       type: object
       properties:
         status:
           type: string
-      required:
-        - status
-
+      required: [status]
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required: [error]
+    CaseStatus:
+      type: string
+      enum: [Missing, Found, "Under Investigation", Closed]
+    SightingStatus:
+      type: string
+      enum: [New, "Under Review", Verified, Rejected, Resolved]
+    ReviewStatus:
+      type: string
+      enum: [Pending, Confirmed, Dismissed]
+    MissingPerson:
+      type: object
+      properties:
+        id: { type: integer }
+        fullName: { type: string }
+        age: { type: integer }
+        gender: { type: string }
+        height: { type: ["string", "null"] }
+        description: { type: ["string", "null"] }
+        identificationMarks: { type: ["string", "null"] }
+        lastKnownLocation: { type: string }
+        missingDate: { type: string, format: date }
+        status:
+          $ref: "#/components/schemas/CaseStatus"
+        imageUrl: { type: ["string", "null"], format: uri }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+      required: [id, fullName, age, gender, lastKnownLocation, missingDate, status, createdAt, updatedAt]
+    MissingPersonDetail:
+      allOf:
+        - $ref: "#/components/schemas/MissingPerson"
+        - type: object
+          properties:
+            contactInformation: { type: ["string", "null"] }
+            additionalInformation: { type: ["string", "null"] }
+            images:
+              type: array
+              items:
+                $ref: "#/components/schemas/PersonImage"
+            sightings:
+              type: array
+              items:
+                $ref: "#/components/schemas/Sighting"
+          required: [images, sightings]
+    PersonImage:
+      type: object
+      properties:
+        id: { type: integer }
+        imageUrl: { type: string, format: uri }
+        createdAt: { type: string, format: date-time }
+      required: [id, imageUrl, createdAt]
+    MissingPersonInput:
+      type: object
+      properties:
+        fullName: { type: string, minLength: 2 }
+        age: { type: integer, minimum: 0, maximum: 120 }
+        gender: { type: string, minLength: 1 }
+        height: { type: string }
+        description: { type: string }
+        identificationMarks: { type: string }
+        lastKnownLocation: { type: string, minLength: 2 }
+        missingDate: { type: string, format: date }
+        contactInformation: { type: string }
+        additionalInformation: { type: string }
+        imageUrl: { type: string, format: uri }
+      required: [fullName, age, gender, lastKnownLocation, missingDate]
+    MissingPersonUpdate:
+      type: object
+      properties:
+        fullName: { type: string, minLength: 2 }
+        age: { type: integer, minimum: 0, maximum: 120 }
+        gender: { type: string }
+        height: { type: string }
+        description: { type: string }
+        identificationMarks: { type: string }
+        lastKnownLocation: { type: string }
+        missingDate: { type: string, format: date }
+        contactInformation: { type: string }
+        additionalInformation: { type: string }
+        status:
+          $ref: "#/components/schemas/CaseStatus"
+        imageUrl: { type: string, format: uri }
+    Sighting:
+      type: object
+      properties:
+        id: { type: integer }
+        missingPersonId: { type: ["integer", "null"] }
+        missingPersonName: { type: ["string", "null"] }
+        imageUrl: { type: ["string", "null"], format: uri }
+        location: { type: string }
+        sightingDate: { type: string, format: date-time }
+        description: { type: string }
+        reporterName: { type: ["string", "null"] }
+        reporterContact: { type: ["string", "null"] }
+        status:
+          $ref: "#/components/schemas/SightingStatus"
+        topMatchScore: { type: ["number", "null"] }
+        createdAt: { type: string, format: date-time }
+      required: [id, location, sightingDate, description, status, createdAt]
+    SightingInput:
+      type: object
+      properties:
+        imageUrl: { type: string, format: uri }
+        location: { type: string, minLength: 2 }
+        sightingDate: { type: string, format: date-time }
+        description: { type: string, minLength: 5 }
+        reporterName: { type: string }
+        reporterContact: { type: string }
+      required: [location, sightingDate, description]
+    SightingReceipt:
+      type: object
+      properties:
+        sighting:
+          $ref: "#/components/schemas/Sighting"
+        message: { type: string }
+        possibleMatches:
+          type: array
+          items:
+            $ref: "#/components/schemas/MatchCandidate"
+      required: [sighting, message, possibleMatches]
+    SightingUpdate:
+      type: object
+      properties:
+        status:
+          $ref: "#/components/schemas/SightingStatus"
+        missingPersonId: { type: integer }
+    PhotoMatchInput:
+      type: object
+      properties:
+        imageUrl: { type: string, format: uri }
+      required: [imageUrl]
+    PhotoMatchResult:
+      type: object
+      properties:
+        message: { type: string }
+        candidates:
+          type: array
+          items:
+            $ref: "#/components/schemas/MatchCandidate"
+      required: [message, candidates]
+    MatchCandidate:
+      type: object
+      properties:
+        missingPersonId: { type: integer }
+        fullName: { type: string }
+        imageUrl: { type: ["string", "null"], format: uri }
+        lastKnownLocation: { type: string }
+        missingDate: { type: string, format: date }
+        confidenceScore: { type: number, minimum: 0, maximum: 100 }
+        label: { type: string }
+      required: [missingPersonId, fullName, lastKnownLocation, missingDate, confidenceScore, label]
+    MatchHistory:
+      type: object
+      properties:
+        id: { type: integer }
+        sightingId: { type: ["integer", "null"] }
+        matchedPersonId: { type: integer }
+        matchedPersonName: { type: string }
+        confidenceScore: { type: number }
+        ranking: { type: integer }
+        reviewStatus:
+          $ref: "#/components/schemas/ReviewStatus"
+        createdAt: { type: string, format: date-time }
+      required: [id, matchedPersonId, matchedPersonName, confidenceScore, ranking, reviewStatus, createdAt]
+    MatchUpdate:
+      type: object
+      properties:
+        reviewStatus:
+          $ref: "#/components/schemas/ReviewStatus"
+      required: [reviewStatus]
+    Alert:
+      type: object
+      properties:
+        id: { type: integer }
+        missingPersonId: { type: integer }
+        missingPersonName: { type: string }
+        sightingId: { type: ["integer", "null"] }
+        confidenceScore: { type: number }
+        status: { type: string, enum: [New, Viewed, "Under Review", Confirmed, Dismissed] }
+        location: { type: ["string", "null"] }
+        createdAt: { type: string, format: date-time }
+      required: [id, missingPersonId, missingPersonName, confidenceScore, status, createdAt]
+    AlertUpdate:
+      type: object
+      properties:
+        status: { type: string, enum: [New, Viewed, "Under Review", Confirmed, Dismissed] }
+      required: [status]
+    DashboardSummary:
+      type: object
+      properties:
+        totalMissingPersons: { type: integer }
+        activeCases: { type: integer }
+        foundPersons: { type: integer }
+        totalSightings: { type: integer }
+        pendingSightings: { type: integer }
+        possibleMatches: { type: integer }
+        highConfidenceMatches: { type: integer }
+        openAlerts: { type: integer }
+        casesByStatus:
+          type: array
+          items:
+            $ref: "#/components/schemas/CountItem"
+        sightingsByDay:
+          type: array
+          items:
+            $ref: "#/components/schemas/CountItem"
+      required: [totalMissingPersons, activeCases, foundPersons, totalSightings, pendingSightings, possibleMatches, highConfidenceMatches, openAlerts, casesByStatus, sightingsByDay]
+    PublicOverview:
+      type: object
+      properties:
+        activeCases: { type: integer }
+        resolvedCases: { type: integer }
+        reportedSightings: { type: integer }
+        possibleMatches: { type: integer }
+      required: [activeCases, resolvedCases, reportedSightings, possibleMatches]
+    CountItem:
+      type: object
+      properties:
+        label: { type: string }
+        count: { type: integer }
+      required: [label, count]
+    Activity:
+      type: object
+      properties:
+        id: { type: integer }
+        action: { type: string }
+        entity: { type: string }
+        entityId: { type: integer }
+        createdAt: { type: string, format: date-time }
+      required: [id, action, entity, entityId, createdAt]
+    RegisterInput:
+      type: object
+      properties:
+        name: { type: string, minLength: 2 }
+        email: { type: string, format: email }
+        password: { type: string, minLength: 8 }
+      required: [name, email, password]
+    LoginInput:
+      type: object
+      properties:
+        email: { type: string, format: email }
+        password: { type: string, minLength: 1 }
+      required: [email, password]
+    AuthResponse:
+      type: object
+      properties:
+        user:
+          $ref: "#/components/schemas/User"
+        token: { type: string }
+      required: [user, token]
+    User:
+      type: object
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        email: { type: string, format: email }
+        role: { type: string, enum: [ADMIN, INVESTIGATOR, PUBLIC] }
+      required: [id, name, email, role]

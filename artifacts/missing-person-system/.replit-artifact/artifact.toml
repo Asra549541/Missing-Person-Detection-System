@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "Missing Person Detection System"
+description = "A secure, human-reviewed platform for managing missing-person cases, public sighting reports, and AI-assisted photo matching for authorized investigators."
+version = "1.0.0"
+id = "artifacts/missing-person-system"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 22811
+
+[services.development]
+run = "pnpm --filter @workspace/missing-person-system run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/missing-person-system", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/missing-person-system/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "22811"
+BASE_PATH = "/"

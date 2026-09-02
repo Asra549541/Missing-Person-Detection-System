@@ -1,0 +1,492 @@
+## REPLIT PROMPT — CCTV PHOTO & VIDEO ANALYSIS
+
+Add a complete **CCTV Photo and Video Analysis module** to my existing project.
+
+Do not modify or remove the existing features. Integrate this feature into the current project.
+
+### 1. CCTV PHOTO UPLOAD
+
+Create a page called:
+
+**CCTV Photo Analysis**
+
+Allow the user to upload CCTV photographs in:
+
+* JPG
+* JPEG
+* PNG
+* WEBP
+
+After uploading:
+
+1. Display the uploaded image.
+2. Detect all faces in the image.
+3. Draw bounding boxes around detected faces.
+4. Extract facial features/embeddings.
+5. Compare detected faces with the existing missing-person database.
+6. Display the best possible matches.
+7. Show a similarity/confidence score.
+8. Show the detected face and the matched person's registered photograph side-by-side.
+
+Example result:
+
+**Detected Person #1**
+
+Possible Match: [Missing Person Name]
+
+Similarity Score: 91%
+
+Status: Possible Match — Human Verification Required
+
+If no face is detected, display:
+
+**"No face detected. Please upload a clearer CCTV image."**
+
+If multiple faces are detected, analyze each face separately.
+
+---
+
+### 2. CCTV VIDEO UPLOAD
+
+Create a page called:
+
+**CCTV Video Analysis**
+
+Allow users to upload CCTV footage.
+
+Support common formats:
+
+* MP4
+* AVI
+* MOV
+* MKV
+* WEBM
+
+After uploading the video:
+
+1. Display video information.
+2. Show video preview.
+3. Extract video duration, FPS and resolution.
+4. Process the video on the server.
+5. Extract frames at regular intervals.
+6. Detect faces from the extracted frames.
+7. Track repeated faces across frames.
+8. Generate facial embeddings.
+9. Compare faces with the existing missing-person database.
+10. Find possible matches.
+11. Record the exact timestamp where the possible match appears.
+12. Display the results.
+
+---
+
+### 3. VIDEO FRAME PROCESSING
+
+Do not process every single frame unnecessarily.
+
+Use configurable frame extraction.
+
+Default:
+
+**1 frame per second**
+
+Allow the user/admin to select:
+
+* 0.5 seconds
+* 1 second
+* 2 seconds
+* 5 seconds
+
+For each processed frame:
+
+**Video → Frame → Face Detection → Face Embedding → Database Comparison**
+
+---
+
+### 4. FACE TRACKING
+
+If the same person appears in multiple consecutive frames, do not create duplicate results.
+
+Group repeated detections into one person track.
+
+Example:
+
+Person Track #1
+
+Appears:
+
+00:01:12
+00:01:13
+00:01:14
+00:01:15
+
+Display this as one detected person.
+
+Store:
+
+* Track ID
+* First appearance
+* Last appearance
+* Number of frames
+* Best-quality frame
+* Best possible match
+
+---
+
+### 5. TIMESTAMP MATCHING
+
+This is an important feature.
+
+For every possible match, save the exact timestamp.
+
+Example:
+
+**Possible Match Found**
+
+Person: Missing Person A
+
+Confidence: 92.4%
+
+Timestamp: **00:03:27**
+
+Camera: Main Entrance
+
+When the investigator clicks the timestamp, the video player should attempt to jump directly to that timestamp.
+
+Show:
+
+**Original CCTV Video**
+
+beside
+
+**Matched Frame**
+
+---
+
+### 6. CAMERA INFORMATION
+
+When uploading CCTV footage, provide fields for:
+
+* Camera Name
+* Camera ID
+* Location
+* Recording Date
+* Recording Time
+* Description
+
+Example:
+
+Camera Name: Main Gate Camera
+
+Camera ID: CAM-001
+
+Location: Main Entrance
+
+Recording Date: 02/09/2026
+
+---
+
+### 7. PROCESSING STATUS
+
+After video upload, show the processing stages:
+
+**Uploading**
+
+↓
+
+**Uploaded**
+
+↓
+
+**Processing Video**
+
+↓
+
+**Extracting Frames**
+
+↓
+
+**Detecting Faces**
+
+↓
+
+**Analyzing Faces**
+
+↓
+
+**Comparing With Missing Person Database**
+
+↓
+
+**Generating Results**
+
+↓
+
+**Analysis Complete**
+
+Do not show fake progress percentages. If exact progress is unavailable, use a loading indicator.
+
+---
+
+### 8. CCTV RESULTS PAGE
+
+Create:
+
+**CCTV Analysis Results**
+
+Display:
+
+### Video Details
+
+* Filename
+* Camera
+* Camera ID
+* Location
+* Recording date
+* Duration
+* Processing status
+
+### Detected People
+
+For every unique detected person show:
+
+* Track ID
+* Best frame
+* First appearance
+* Last appearance
+* Number of observations
+* Best possible match
+* Similarity score
+
+---
+
+### 9. POSSIBLE MATCHES
+
+Show the top 5 possible matches for each detected person.
+
+Each result should contain:
+
+* CCTV face/frame
+* Registered missing-person photograph
+* Name
+* Age
+* Missing date
+* Last known location
+* Similarity score
+* Timestamp
+* Review status
+
+Sort matches from highest similarity to lowest.
+
+Use labels:
+
+* High-confidence possible match
+* Possible match
+* Low-confidence match
+* No reliable match
+
+Do NOT state that the AI has definitively identified the person.
+
+---
+
+### 10. HUMAN VERIFICATION
+
+Every AI result must be manually reviewable.
+
+Add buttons:
+
+* Review Match
+* Confirm Possible Match
+* Reject Match
+* Mark for Further Investigation
+
+Allow the investigator to enter notes.
+
+Store:
+
+* Reviewer
+* Decision
+* Notes
+* Date/time
+
+---
+
+### 11. CCTV EVIDENCE STORAGE
+
+Create a database record for every uploaded CCTV file.
+
+Store:
+
+* File name
+* File type
+* File location
+* Camera name
+* Camera ID
+* Recording location
+* Recording date
+* Recording time
+* Duration
+* Uploaded by
+* Upload date
+* Processing status
+
+Store relevant matching frames and timestamps.
+
+Temporary frames used during processing should be deleted when they are no longer required.
+
+---
+
+### 12. CCTV HISTORY
+
+Create a page:
+
+**CCTV Analysis History**
+
+Display a table containing:
+
+| Video | Camera | Location | Date | Duration | Status | Matches |
+| ----- | ------ | -------- | ---- | -------- | ------ | ------- |
+
+Allow users to:
+
+* Search
+* Filter
+* View analysis
+* Delete/archive evidence if authorized
+
+---
+
+### 13. SECURITY
+
+CCTV footage must NOT be publicly accessible.
+
+Only authenticated and authorized users should be able to:
+
+* Upload CCTV
+* View CCTV
+* Analyze CCTV
+* View detected faces
+* View possible matches
+* Download evidence
+
+Implement proper authentication and authorization.
+
+---
+
+### 14. TECHNOLOGY
+
+Use technologies compatible with the existing project.
+
+For video processing, use:
+
+**FFmpeg**
+
+For image/video processing and face detection, use an appropriate reliable computer-vision library such as:
+
+**OpenCV**
+
+Reuse the existing face-recognition/AI system in my project wherever possible.
+
+Do not replace the existing AI implementation unless necessary.
+
+---
+
+### 15. IMPORTANT
+
+The system must actually process the uploaded CCTV video.
+
+Do NOT create:
+
+* Fake results
+* Hard-coded matches
+* Fake confidence scores
+* Fake timestamps
+* Static demo videos
+* Placeholder processing screens
+
+The results must come from the uploaded CCTV image/video and the actual missing-person database.
+
+---
+
+### FINAL WORKFLOW
+
+### CCTV PHOTO
+
+Upload CCTV Photo
+
+↓
+
+Detect Faces
+
+↓
+
+Extract Features
+
+↓
+
+Compare With Missing Person Database
+
+↓
+
+Show Top Possible Matches
+
+↓
+
+Display Similarity Score
+
+↓
+
+Human Verification
+
+### CCTV VIDEO
+
+Upload CCTV Video
+
+↓
+
+Extract Metadata
+
+↓
+
+Extract Frames
+
+↓
+
+Detect Faces
+
+↓
+
+Track Faces
+
+↓
+
+Extract Facial Features
+
+↓
+
+Compare With Missing Person Database
+
+↓
+
+Find Possible Matches
+
+↓
+
+Record Timestamp
+
+↓
+
+Show Best Frame
+
+↓
+
+Display Match Results
+
+↓
+
+Investigator Reviews Result
+
+↓
+
+Confirm / Reject / Further Investigation
+
+Build this as a fully functional feature and integrate it with my existing project.
