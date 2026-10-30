@@ -97,6 +97,59 @@ export const auditLogsTable = pgTable("sentinel_audit_logs", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+export const cctvEvidenceTable = pgTable("sentinel_cctv_evidence", {
+  id: serial("id").primaryKey(),
+  fileName: varchar("file_name", { length: 255 }).notNull(),
+  fileType: varchar("file_type", { length: 80 }).notNull(),
+  filePath: text("file_path").notNull(),
+  mediaType: varchar("media_type", { length: 20 }).notNull().default("video"),
+  cameraName: varchar("camera_name", { length: 160 }),
+  cameraId: varchar("camera_id", { length: 80 }),
+  location: varchar("location", { length: 180 }),
+  recordingDate: date("recording_date", { mode: "string" }),
+  recordingTime: varchar("recording_time", { length: 40 }),
+  description: text("description"),
+  durationSeconds: real("duration_seconds"),
+  fps: real("fps"),
+  width: integer("width"),
+  height: integer("height"),
+  frameInterval: real("frame_interval").notNull().default(1),
+  uploadedBy: integer("uploaded_by"),
+  uploadedAt: timestamp("uploaded_at", { withTimezone: true }).notNull().defaultNow(),
+  processingStatus: varchar("processing_status", { length: 40 }).notNull().default("Uploaded"),
+  errorMessage: text("error_message"),
+  completedAt: timestamp("completed_at", { withTimezone: true }),
+  archived: text("archived").notNull().default("false"),
+});
+
+export const cctvTracksTable = pgTable("sentinel_cctv_tracks", {
+  id: serial("id").primaryKey(),
+  evidenceId: integer("evidence_id").notNull(),
+  trackNumber: integer("track_number").notNull(),
+  firstTimestamp: real("first_timestamp").notNull(),
+  lastTimestamp: real("last_timestamp").notNull(),
+  frameCount: integer("frame_count").notNull(),
+  bestFramePath: text("best_frame_path"),
+  bestMatchPersonId: integer("best_match_person_id"),
+  bestMatchScore: real("best_match_score"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const cctvMatchesTable = pgTable("sentinel_cctv_matches", {
+  id: serial("id").primaryKey(),
+  evidenceId: integer("evidence_id").notNull(),
+  trackId: integer("track_id"),
+  matchedPersonId: integer("matched_person_id"),
+  cctvFramePath: text("cctv_frame_path"),
+  confidenceScore: real("confidence_score"),
+  timestampSeconds: real("timestamp_seconds"),
+  reviewStatus: varchar("review_status", { length: 40 }).notNull().default("Pending"),
+  reviewedBy: integer("reviewed_by"),
+  notes: text("notes"),
+  reviewedAt: timestamp("reviewed_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
 export const insertUserSchema = createInsertSchema(usersTable).omit({
   id: true,
   createdAt: true,
@@ -127,6 +180,20 @@ export const insertAuditLogSchema = createInsertSchema(auditLogsTable).omit({
   id: true,
   createdAt: true,
 });
+export const insertCctvEvidenceSchema = createInsertSchema(cctvEvidenceTable).omit({
+  id: true,
+  uploadedAt: true,
+  processingStatus: true,
+  completedAt: true,
+});
+export const insertCctvTrackSchema = createInsertSchema(cctvTracksTable).omit({
+  id: true,
+  createdAt: true,
+});
+export const insertCctvMatchSchema = createInsertSchema(cctvMatchesTable).omit({
+  id: true,
+  createdAt: true,
+});
 
 export type User = typeof usersTable.$inferSelect;
 export type MissingPerson = typeof missingPersonsTable.$inferSelect;
@@ -134,3 +201,6 @@ export type PersonImage = typeof personImagesTable.$inferSelect;
 export type Sighting = typeof sightingsTable.$inferSelect;
 export type MatchHistory = typeof matchHistoryTable.$inferSelect;
 export type Alert = typeof alertsTable.$inferSelect;
+export type CctvEvidence = typeof cctvEvidenceTable.$inferSelect;
+export type CctvTrack = typeof cctvTracksTable.$inferSelect;
+export type CctvMatch = typeof cctvMatchesTable.$inferSelect;
